@@ -10,9 +10,10 @@ import (
 	"github.com/luke-jj/go-weather-api/internal/database"
 )
 
-func Startup() {
+func Start() {
 	router := chi.NewRouter()
 	config := config.Read()
+
 	database.Init(config)
 	defer config.Client.Disconnect(config.Ctx)
 	startup.Middleware(config, router)

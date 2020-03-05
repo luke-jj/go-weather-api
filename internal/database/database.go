@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/luke-jj/go-weather-api/internal/models"
+	c "github.com/luke-jj/go-weather-api/internal/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Init(config *models.Config) {
+func Init(config *c.Config) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(config.MONGO_URI))
 	if err != nil {
 		log.Fatal(err)

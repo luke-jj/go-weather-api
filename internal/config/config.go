@@ -5,11 +5,9 @@ import (
 	"log"
 	"os"
 	"strconv"
-
-	"github.com/luke-jj/go-weather-api/internal/models"
 )
 
-func Read() *models.Config {
+func Read() *Config {
 	port := os.Getenv("PORT")
 	envMode := os.Getenv("ENVIRONMENT_MODE")
 	name := os.Getenv("API_CONFIG_NAME")
@@ -46,7 +44,7 @@ func Read() *models.Config {
 		log.Fatal(errors.New("FATAL ERROR: API_JWTPRIVATEKEY must be set."))
 	}
 
-	config := models.Config{
+	config := Config{
 		ENVIRONMENT_MODE: envMode,
 		PORT:             port,
 		CONFIG_NAME:      name,

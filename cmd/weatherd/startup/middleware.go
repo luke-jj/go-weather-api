@@ -2,19 +2,18 @@ package startup
 
 import (
 	"github.com/go-chi/chi"
-	chiMiddleware "github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/middleware"
-	"github.com/luke-jj/go-weather-api/internal/models"
+	m "github.com/luke-jj/go-weather-api/cmd/weatherd/middleware"
+	c "github.com/luke-jj/go-weather-api/internal/config"
 )
 
-func Middleware(config *models.Config, router *chi.Mux) {
-	router.Use(
-		middleware.GetCORSHandler(),
+func Middleware(config *c.Config, r *chi.Mux) {
+	r.Use(
+		m.GetCORSHandler(),
 		render.SetContentType(render.ContentTypeJSON),
-		chiMiddleware.Logger,
-		chiMiddleware.Compress(5),
-		chiMiddleware.RedirectSlashes,
-		chiMiddleware.Recoverer,
+		middleware.Logger,
+		middleware.Compress(5),
+		middleware.Recoverer,
 	)
 }
