@@ -1,20 +1,23 @@
 package weatherd
 
 import (
-	"fmt"
 	"log"
-	// "net/http"
+	"net/http"
 
+	"github.com/go-chi/chi"
+	"github.com/luke-jj/go-weather-api/cmd/weatherd/startup"
 	"github.com/luke-jj/go-weather-api/internal/config"
+	"github.com/luke-jj/go-weather-api/internal/database"
 )
 
 func Startup() {
-	config, err := config.New()
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Listening on port %v...\n", config.PORT)
-	// log.Fatal(http.ListenAndServe(":"+config.PORT, r)
+	router := chi.NewRouter()
+	config := config.Read()
+	database.Init(config)
+	defer config.Client.Disconnect(config.Ctx)
+	startup.Middleware(config, router)
+	startup.Routes(config, router)
+	startup.LogRoutes(router)
+	log.Printf("Listening on port %v...\n", config.PORT)
+	log.Fatal(http.ListenAndServe(":"+config.PORT, router))
 }

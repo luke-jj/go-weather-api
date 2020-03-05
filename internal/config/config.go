@@ -2,25 +2,14 @@ package config
 
 import (
 	"errors"
+	"log"
 	"os"
 	"strconv"
+
+	"github.com/luke-jj/go-weather-api/internal/models"
 )
 
-type Config struct {
-	ENVIRONMENT_MODE string
-	CONFIG_NAME      string
-	PORT             string
-	WEATHER_URI      string
-	WEATHER_KEY      string
-	TIME_URI         string
-	MONGO_URI        string
-	MONGO_DBNAME     string
-	JWTPRIVATEKEY    string
-	LOG_ENABLED      bool
-}
-
-func New() (*Config, error) {
-	var err error = nil
+func Read() *models.Config {
 	port := os.Getenv("PORT")
 	envMode := os.Getenv("ENVIRONMENT_MODE")
 	name := os.Getenv("API_CONFIG_NAME")
@@ -33,31 +22,31 @@ func New() (*Config, error) {
 	logEnabled, _ := strconv.ParseBool(os.Getenv("API_LOG_ENABLED"))
 
 	if port == "" {
-		err = errors.New("FATAL ERROR: PORT must be set.")
+		log.Fatal(errors.New("FATAL ERROR: PORT must be set."))
 	}
 	if envMode == "" {
-		err = errors.New("FATAL ERROR: ENVIRONMENT_MODE must be set.")
+		log.Fatal(errors.New("FATAL ERROR: ENVIRONMENT_MODE must be set."))
 	}
 	if weatherURI == "" {
-		err = errors.New("FATAL ERROR: API_WEATHER_URI must be set.")
+		log.Fatal(errors.New("FATAL ERROR: API_WEATHER_URI must be set."))
 	}
 	if weatherKey == "" {
-		err = errors.New("FATAL ERROR: API_WEATHER_KEY must be set.")
+		log.Fatal(errors.New("FATAL ERROR: API_WEATHER_KEY must be set."))
 	}
 	if timeURI == "" {
-		err = errors.New("FATAL ERROR: API_TIME_URI must be set.")
+		log.Fatal(errors.New("FATAL ERROR: API_TIME_URI must be set."))
 	}
 	if mongoURI == "" {
-		err = errors.New("FATAL ERROR: API_MONGO_URI must be set.")
+		log.Fatal(errors.New("FATAL ERROR: API_MONGO_URI must be set."))
 	}
 	if dbName == "" {
-		err = errors.New("FATAL ERROR: API_MONGO_DBNAME must be set.")
+		log.Fatal(errors.New("FATAL ERROR: API_MONGO_DBNAME must be set."))
 	}
 	if jwtKey == "" {
-		err = errors.New("FATAL ERROR: API_JWTPRIVATEKEY must be set.")
+		log.Fatal(errors.New("FATAL ERROR: API_JWTPRIVATEKEY must be set."))
 	}
 
-	config := Config{
+	config := models.Config{
 		ENVIRONMENT_MODE: envMode,
 		PORT:             port,
 		CONFIG_NAME:      name,
@@ -70,5 +59,5 @@ func New() (*Config, error) {
 		LOG_ENABLED:      logEnabled,
 	}
 
-	return &config, err
+	return &config
 }
