@@ -26,6 +26,7 @@ func Init(config *c.Config) *Database {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Successfully connected to MongoDB...")
 
 	db := Database{
 		Client: client,
