@@ -11,6 +11,7 @@ import (
 
 func Routes(config *c.Config, r *chi.Mux) {
 	r.Mount("/api/v1/forecasts", routes.Forecasts(config))
+	r.Mount("/api/v1/time", routes.Times(config))
 }
 
 func LogRoutes(r *chi.Mux) {
