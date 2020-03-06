@@ -3,11 +3,13 @@ package routes
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
+	"github.com/go-playground/validator"
 	"github.com/luke-jj/go-weather-api/cmd/weatherd/middleware"
 	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
 	d "github.com/luke-jj/go-weather-api/internal/database"
@@ -31,6 +33,19 @@ func Forecasts() *chi.Mux {
 
 func createForecast(w http.ResponseWriter, r *http.Request) {
 	var forecast models.Forecast
+	json.NewDecoder(r.Body).Decode(&forecast)
+	defer r.Body.Close()
+	validate := validator.New()
+	err := validate.Struct(forecast)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			message := fmt.Sprintf("Input validation failed. Field '%v' must be of type '%v' and satisfy the condition: '%v %v'", err.Field(), err.Kind().String(), err.Tag(), err.Param())
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{ "message": "` + message + `"}`))
+			return
+		}
+	}
+
 	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -39,8 +54,6 @@ func createForecast(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	coll := db.Db.Collection("forecasts")
-	// TODO: Validate request body
-	json.NewDecoder(r.Body).Decode(&forecast)
 	result, err := coll.InsertOne(ctx, forecast)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -110,6 +123,18 @@ func getForecastById(w http.ResponseWriter, r *http.Request) {
 func updateForecast(w http.ResponseWriter, r *http.Request) {
 	var forecast models.Forecast
 	var replacedForecast models.Forecast
+	json.NewDecoder(r.Body).Decode(&forecast)
+	defer r.Body.Close()
+	validate := validator.New()
+	err := validate.Struct(forecast)
+	if err != nil {
+		for _, err := range err.(validator.ValidationErrors) {
+			message := fmt.Sprintf("Input validation failed. Field '%v' must be of type '%v' and satisfy the condition: '%v %v'", err.Field(), err.Kind().String(), err.Tag(), err.Param())
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{ "message": "` + message + `"}`))
+			return
+		}
+	}
 	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -124,8 +149,6 @@ func updateForecast(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{ "message": "` + "Not a valid id." + `"}`))
 		return
 	}
-	// TODO: Validate request body
-	json.NewDecoder(r.Body).Decode(&forecast)
 	filter := bson.M{"_id": id}
 	forecast.ID = id
 	err = coll.FindOneAndReplace(ctx, filter, forecast).Decode(&replacedForecast)
