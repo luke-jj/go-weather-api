@@ -16,7 +16,7 @@ func Weather() *chi.Mux {
 }
 
 func getWeather(w http.ResponseWriter, r *http.Request) {
-	con, ok := r.Context().Value("config").(*c.Config)
+	config, ok := r.Context().Value("config").(*c.Config)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
@@ -36,8 +36,9 @@ func getWeather(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: escape the city query parameter
 
-	weatherUri := "https://" + con.WEATHER_URI + "/data/2.5/forecast" + "?city=" + city
-	response, err := http.Get(weatherUri)
+	weatherUri := "https://" + config.WEATHER_URI + "/data/2.5/forecast"
+	queryString := "?q=" + city + "&units=metric&APPID=" + config.WEATHER_KEY
+	response, err := http.Get(weatherUri + queryString)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
