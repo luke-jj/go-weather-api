@@ -10,6 +10,7 @@ import (
 
 func Middleware(config *c.Config, r *chi.Mux) {
 	r.Use(
+		m.SetContentTypeJSON,
 		m.GetCORSHandler(),
 		render.SetContentType(render.ContentTypeJSON),
 		middleware.Logger,
