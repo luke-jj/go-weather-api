@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -37,8 +38,12 @@ func getTime(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
-	timeUri := "http://" + con.TIME_URI + "/api/json/utc/now"
-	response, err := http.Get(timeUri)
+	uri := &url.URL{
+		Scheme: "http",
+		Host:   con.TIME_URI,
+		Path:   "/api/json/utc/now",
+	}
+	response, err := http.Get(uri.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "Problem fetching time from external api."}`))

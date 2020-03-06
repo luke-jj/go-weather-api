@@ -3,6 +3,8 @@ package routes
 import (
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"regexp"
 
 	"github.com/go-chi/chi"
 	c "github.com/luke-jj/go-weather-api/internal/config"
@@ -28,18 +30,22 @@ func getWeather(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{ "message": "Query string param 'city' is required."}`))
 		return
 	}
-
-	// TODO: reg ex test city parameter
-	// if (!/^[0-9A-Za-z .,]{1,42}$/.test(req.query['city'])) {
-	// return res.status(400).send('Illegal city name.');
-	// }
-
-	// TODO: escape the city query parameter
-
-	weatherUri := "https://" + config.WEATHER_URI + "/data/2.5/forecast"
-	queryString := "?q=" + city + "&units=metric&APPID=" + config.WEATHER_KEY
-	response, err := http.Get(weatherUri + queryString)
-
+	if !regexp.MustCompile(`^[0-9A-Za-z .,]{1,42}$`).MatchString(city) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(`{ "message": "Illegal city name."}`))
+		return
+	}
+	params := url.Values{}
+	params.Add("q", city)
+	params.Add("units", "metric")
+	params.Add("APPID", config.WEATHER_KEY)
+	uri := &url.URL{
+		Scheme:   "https",
+		Host:     config.WEATHER_URI,
+		Path:     "/data/2.5/forecast",
+		RawQuery: params.Encode(),
+	}
+	response, err := http.Get(uri.String())
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "Problem fetching weather from external api."}`))
