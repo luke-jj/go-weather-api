@@ -6,12 +6,14 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/luke-jj/go-weather-api/cmd/weatherd/routes"
-	c "github.com/luke-jj/go-weather-api/internal/config"
 )
 
-func Routes(config *c.Config, r *chi.Mux) {
-	r.Mount("/api/v1/forecasts", routes.Forecasts(config))
-	r.Mount("/api/v1/time", routes.Times(config))
+func Routes(r *chi.Mux) {
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Mount("/forecasts", routes.Forecasts())
+		r.Mount("/time", routes.Times())
+		r.Mount("/weather", routes.Weather())
+	})
 }
 
 func LogRoutes(r *chi.Mux) {

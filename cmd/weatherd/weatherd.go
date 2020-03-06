@@ -6,18 +6,18 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/luke-jj/go-weather-api/cmd/weatherd/startup"
-	"github.com/luke-jj/go-weather-api/internal/config"
+	c "github.com/luke-jj/go-weather-api/internal/config"
 	"github.com/luke-jj/go-weather-api/internal/database"
 )
 
 func Start() {
 	router := chi.NewRouter()
-	config := config.Read()
+	config := c.Read()
 
 	database.Init(config)
 	defer config.Client.Disconnect(config.Ctx)
 	startup.Middleware(config, router)
-	startup.Routes(config, router)
+	startup.Routes(router)
 	startup.LogRoutes(router)
 	log.Printf("Listening on port %v...\n", config.PORT)
 	log.Fatal(http.ListenAndServe(":"+config.PORT, router))

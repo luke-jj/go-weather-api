@@ -1,9 +1,6 @@
 package models
 
-import (
-	// "go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Forecast struct {
 	ID    primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`

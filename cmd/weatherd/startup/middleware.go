@@ -1,20 +1,26 @@
 package startup
 
 import (
+	"time"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/render"
 	m "github.com/luke-jj/go-weather-api/cmd/weatherd/middleware"
 	c "github.com/luke-jj/go-weather-api/internal/config"
 )
 
 func Middleware(config *c.Config, r *chi.Mux) {
 	r.Use(
-		m.SetContentTypeJSON,
+		// TODO: set config as context
 		m.GetCORSHandler(),
-		render.SetContentType(render.ContentTypeJSON),
+		m.SetConfigContext(config),
+		middleware.SetHeader("Content-Type", "application/json; charset=utf-8"),
+		middleware.Timeout(20*time.Second),
+		middleware.RequestID,
+		middleware.RealIP,
 		middleware.Logger,
 		middleware.Compress(5),
 		middleware.Recoverer,
+		middleware.URLFormat,
 	)
 }
