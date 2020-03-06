@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/render"
 	"github.com/luke-jj/go-weather-api/cmd/weatherd/middleware"
 	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
-	c "github.com/luke-jj/go-weather-api/internal/config"
+	d "github.com/luke-jj/go-weather-api/internal/database"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -31,14 +31,14 @@ func Forecasts() *chi.Mux {
 
 func createForecast(w http.ResponseWriter, r *http.Request) {
 	var forecast models.Forecast
-	con, ok := r.Context().Value("config").(*c.Config)
+	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := con.Db.Collection("forecasts")
+	coll := db.Db.Collection("forecasts")
 	// TODO: Validate request body
 	json.NewDecoder(r.Body).Decode(&forecast)
 	result, err := coll.InsertOne(ctx, forecast)
@@ -54,14 +54,14 @@ func createForecast(w http.ResponseWriter, r *http.Request) {
 
 func getForecasts(w http.ResponseWriter, r *http.Request) {
 	var forecasts []models.Forecast
-	con, ok := r.Context().Value("config").(*c.Config)
+	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := con.Db.Collection("forecasts")
+	coll := db.Db.Collection("forecasts")
 	cursor, err := coll.Find(ctx, bson.M{})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -79,14 +79,14 @@ func getForecasts(w http.ResponseWriter, r *http.Request) {
 
 func getForecastById(w http.ResponseWriter, r *http.Request) {
 	var forecast models.Forecast
-	con, ok := r.Context().Value("config").(*c.Config)
+	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := con.Db.Collection("forecasts")
+	coll := db.Db.Collection("forecasts")
 	id, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -110,14 +110,14 @@ func getForecastById(w http.ResponseWriter, r *http.Request) {
 func updateForecast(w http.ResponseWriter, r *http.Request) {
 	var forecast models.Forecast
 	var replacedForecast models.Forecast
-	con, ok := r.Context().Value("config").(*c.Config)
+	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := con.Db.Collection("forecasts")
+	coll := db.Db.Collection("forecasts")
 	id, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -144,14 +144,14 @@ func updateForecast(w http.ResponseWriter, r *http.Request) {
 
 func deleteForecast(w http.ResponseWriter, r *http.Request) {
 	var deletedForecast models.Forecast
-	con, ok := r.Context().Value("config").(*c.Config)
+	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := con.Db.Collection("forecasts")
+	coll := db.Db.Collection("forecasts")
 	id, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

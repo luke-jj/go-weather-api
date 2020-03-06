@@ -10,7 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Init(config *c.Config) {
+type Database struct {
+	Client *mongo.Client
+	Db     *mongo.Database
+	Ctx    context.Context
+}
+
+func Init(config *c.Config) *Database {
 	client, err := mongo.NewClient(options.Client().ApplyURI(config.MONGO_URI))
 	if err != nil {
 		log.Fatal(err)
@@ -21,7 +27,11 @@ func Init(config *c.Config) {
 		log.Fatal(err)
 	}
 
-	config.Client = client
-	config.Ctx = ctx
-	config.Db = client.Database(config.MONGO_DBNAME)
+	db := Database{
+		Client: client,
+		Ctx:    ctx,
+		Db:     client.Database(config.MONGO_DBNAME),
+	}
+
+	return &db
 }
