@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-playground/validator"
 	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
+	c "github.com/luke-jj/go-weather-api/internal/config"
 	d "github.com/luke-jj/go-weather-api/internal/database"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -60,8 +61,19 @@ func Auth() *chi.Mux {
 			return
 		}
 
-		// TODO: generate JWT token
-		w.Write([]byte(`{ "message": "Successfully authenticated. token: sadfasdfadsf"}`))
+		config, ok := r.Context().Value("config").(*c.Config)
+		if !ok {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
+			return
+		}
+		token, err := user.GenerateAuthToken(config.JWTPRIVATEKEY)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
+			return
+		}
+		w.Write([]byte(`{ "token": "` + token + `"}`))
 	})
 
 	return r

@@ -23,11 +23,12 @@ func Users() *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Post("/", createUser)
-	r.With(middleware.Admin).Get("/", getUsers)
+	r.With(middleware.Auth, middleware.Admin).Get("/", getUsers)
 	r.Route("/{id}", func(r chi.Router) {
-		r.With(middleware.Admin).Get("/", getUserById)
-		r.With(middleware.Admin).Put("/", updateUser)
-		r.With(middleware.Admin).Delete("/", deleteUser)
+		r.Use(middleware.Auth, middleware.Admin)
+		r.Get("/", getUserById)
+		r.Put("/", updateUser)
+		r.Delete("/", deleteUser)
 	})
 
 	return r
@@ -75,7 +76,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Password = string(hash)
-
+	user.IsAdmin = false
 	result, err := coll.InsertOne(ctx, user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
