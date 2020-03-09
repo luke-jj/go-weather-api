@@ -9,19 +9,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
 	c "github.com/luke-jj/go-weather-api/internal/config"
 )
-
-type Time struct {
-	ID                    string `json:"$id"`
-	CurrentDateTime       string `json:"currentDateTime"`
-	UTCOffset             string `json:"utcOffset"`
-	IsDayLightSavingsTime bool   `json:"isDayLightSavingsTime"`
-	DayOfTheWeek          string `json:"dayOfTheWeek"`
-	TimeZoneName          string `json:"UTC""`
-	CurrentFileTime       int64  `json:"currentFileTime"`
-	OrdinalDate           string `json:"ordinalDate"`
-}
 
 func Times() *chi.Mux {
 	r := chi.NewRouter()
@@ -31,7 +21,7 @@ func Times() *chi.Mux {
 }
 
 func getTime(w http.ResponseWriter, r *http.Request) {
-	var t Time
+	var t models.Time
 	con, ok := r.Context().Value("config").(*c.Config)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)

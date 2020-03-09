@@ -13,7 +13,6 @@ import (
 func Start() {
 	router := chi.NewRouter()
 	config := c.Read()
-
 	db := database.Init(config)
 	defer db.Client.Disconnect(db.Ctx)
 	startup.Middleware(config, db, router)

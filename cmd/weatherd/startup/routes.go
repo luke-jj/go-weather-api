@@ -11,6 +11,8 @@ import (
 func Routes(r *chi.Mux) {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Mount("/forecasts", routes.Forecasts())
+		r.Mount("/users", routes.Users())
+		r.Mount("/auth", routes.Auth())
 		r.Mount("/time", routes.Times())
 		r.Mount("/weather", routes.Weather())
 	})
