@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
 	c "github.com/luke-jj/go-weather-api/internal/config"
+	"github.com/luke-jj/go-weather-api/pkg/models"
 )
 
 func Times() *chi.Mux {

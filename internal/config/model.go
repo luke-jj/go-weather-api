@@ -1,14 +1,14 @@
 package config
 
 type Config struct {
-	ENVIRONMENT_MODE string
+	ENVIRONMENT_MODE string `validate:"required"`
 	CONFIG_NAME      string
-	PORT             string
-	WEATHER_URI      string
-	WEATHER_KEY      string
-	TIME_URI         string
-	MONGO_URI        string
-	MONGO_DBNAME     string
-	JWTPRIVATEKEY    string
+	PORT             string `validate:"required"`
+	WEATHER_URI      string `validate:"required"`
+	WEATHER_KEY      string `validate:"required"`
+	TIME_URI         string `validate:"required"`
+	MONGO_URI        string `validate:"required"`
+	MONGO_DBNAME     string `validate:"required"`
+	JWTPRIVATEKEY    string `validate:"required"`
 	LOG_ENABLED      bool
 }

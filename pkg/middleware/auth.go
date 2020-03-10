@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
 	c "github.com/luke-jj/go-weather-api/internal/config"
+	"github.com/luke-jj/go-weather-api/pkg/models"
 )
 
 func Auth(next http.Handler) http.Handler {

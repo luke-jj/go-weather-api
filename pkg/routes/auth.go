@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-playground/validator"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
 	c "github.com/luke-jj/go-weather-api/internal/config"
 	d "github.com/luke-jj/go-weather-api/internal/database"
+	"github.com/luke-jj/go-weather-api/pkg/models"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
 )

@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
-	m "github.com/luke-jj/go-weather-api/cmd/weatherd/middleware"
 	c "github.com/luke-jj/go-weather-api/internal/config"
 	d "github.com/luke-jj/go-weather-api/internal/database"
+	m "github.com/luke-jj/go-weather-api/pkg/middleware"
 )
 
 func Middleware(config *c.Config, db *d.Database, r *chi.Mux) {

@@ -1,16 +1,16 @@
-package weatherd
+package main
 
 import (
 	"log"
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/startup"
 	c "github.com/luke-jj/go-weather-api/internal/config"
 	"github.com/luke-jj/go-weather-api/internal/database"
+	"github.com/luke-jj/go-weather-api/pkg/startup"
 )
 
-func Start() {
+func main() {
 	router := chi.NewRouter()
 	config := c.Read()
 	db := database.Init(config)

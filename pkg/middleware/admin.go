@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
+	"github.com/luke-jj/go-weather-api/pkg/models"
 	"net/http"
 )
 

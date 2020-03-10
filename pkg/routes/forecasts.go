@@ -10,36 +10,33 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/middleware"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
 	d "github.com/luke-jj/go-weather-api/internal/database"
+	"github.com/luke-jj/go-weather-api/pkg/middleware"
+	"github.com/luke-jj/go-weather-api/pkg/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 )
 
-func Users() *chi.Mux {
+func Forecasts() *chi.Mux {
 	r := chi.NewRouter()
-
-	r.Post("/", createUser)
-	r.With(middleware.Auth, middleware.Admin).Get("/", getUsers)
+	r.Get("/", getForecasts)
+	r.With(middleware.Auth, middleware.Admin).Post("/", createForecast)
 	r.Route("/{id}", func(r chi.Router) {
-		r.Use(middleware.Auth, middleware.Admin)
-		r.Get("/", getUserById)
-		r.Put("/", updateUser)
-		r.Delete("/", deleteUser)
+		r.Get("/", getForecastById)
+		r.With(middleware.Auth, middleware.Admin).Put("/", updateForecast)
+		r.With(middleware.Auth, middleware.Admin).Delete("/", deleteForecast)
 	})
 
 	return r
 }
 
-func createUser(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	json.NewDecoder(r.Body).Decode(&user)
+func createForecast(w http.ResponseWriter, r *http.Request) {
+	var forecast models.Forecast
+	json.NewDecoder(r.Body).Decode(&forecast)
 	defer r.Body.Close()
 	validate := validator.New()
-	err := validate.Struct(user)
+	err := validate.Struct(forecast)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			message := fmt.Sprintf("Input validation failed. Field '%v' must be of type '%v' and satisfy the condition: '%v %v'", err.Field(), err.Kind().String(), err.Tag(), err.Param())
@@ -56,40 +53,20 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := db.Db.Collection("users")
-	err = coll.FindOne(ctx, models.User{Email: user.Email}).Decode(&user)
-	if err == nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{ "message": "` + "Email already in use." + `"}`))
-		return
-	}
-	if err != mongo.ErrNoDocuments {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
-		return
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
-		return
-	}
-	user.Password = string(hash)
-	user.IsAdmin = false
-	result, err := coll.InsertOne(ctx, user)
+	coll := db.Db.Collection("forecasts")
+	result, err := coll.InsertOne(ctx, forecast)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
 	id, _ := result.InsertedID.(primitive.ObjectID)
-	user.ID = id
-	render.JSON(w, r, user)
+	forecast.ID = id
+	render.JSON(w, r, forecast)
 }
 
-func getUsers(w http.ResponseWriter, r *http.Request) {
-	var users []models.User
+func getForecasts(w http.ResponseWriter, r *http.Request) {
+	var forecasts []models.Forecast
 	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -97,27 +74,24 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := db.Db.Collection("users")
+	coll := db.Db.Collection("forecasts")
 	cursor, err := coll.Find(ctx, bson.M{})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
-	if err = cursor.All(ctx, &users); err != nil {
+	if err = cursor.All(ctx, &forecasts); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
-	for i := range users {
-		users[i].Password = ""
-	}
 	// renders 'null' instead of an empty array '[]' if no data in db.
-	render.JSON(w, r, users)
+	render.JSON(w, r, forecasts)
 }
 
-func getUserById(w http.ResponseWriter, r *http.Request) {
-	var user models.User
+func getForecastById(w http.ResponseWriter, r *http.Request) {
+	var forecast models.Forecast
 	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -125,35 +99,34 @@ func getUserById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := db.Db.Collection("users")
+	coll := db.Db.Collection("forecasts")
 	id, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{ "message": "` + "Not a valid id." + `"}`))
 		return
 	}
-	err = coll.FindOne(ctx, models.User{ID: id}).Decode(&user)
+	err = coll.FindOne(ctx, models.Forecast{ID: id}).Decode(&forecast)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{ "message": "User with given id not found."}`))
+			w.Write([]byte(`{ "message": "Forecast with given id not found."}`))
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
-	user.Password = ""
-	render.JSON(w, r, user)
+	render.JSON(w, r, forecast)
 }
 
-func updateUser(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	var replacedUser models.User
-	json.NewDecoder(r.Body).Decode(&user)
+func updateForecast(w http.ResponseWriter, r *http.Request) {
+	var forecast models.Forecast
+	var replacedForecast models.Forecast
+	json.NewDecoder(r.Body).Decode(&forecast)
 	defer r.Body.Close()
 	validate := validator.New()
-	err := validate.Struct(user)
+	err := validate.Struct(forecast)
 	if err != nil {
 		for _, err := range err.(validator.ValidationErrors) {
 			message := fmt.Sprintf("Input validation failed. Field '%v' must be of type '%v' and satisfy the condition: '%v %v'", err.Field(), err.Kind().String(), err.Tag(), err.Param())
@@ -162,15 +135,6 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if user.Password != "" {
-		hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
-			return
-		}
-		user.Password = string(hash)
-	}
 	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -178,7 +142,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := db.Db.Collection("users")
+	coll := db.Db.Collection("forecasts")
 	id, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -186,24 +150,23 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	filter := bson.M{"_id": id}
-	user.ID = id
-	err = coll.FindOneAndReplace(ctx, filter, user).Decode(&replacedUser)
+	forecast.ID = id
+	err = coll.FindOneAndReplace(ctx, filter, forecast).Decode(&replacedForecast)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{ "message": "User with given id not found."}`))
+			w.Write([]byte(`{ "message": "Forecast with given id not found."}`))
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
-	user.Password = ""
-	render.JSON(w, r, user)
+	render.JSON(w, r, forecast)
 }
 
-func deleteUser(w http.ResponseWriter, r *http.Request) {
-	var deletedUser models.User
+func deleteForecast(w http.ResponseWriter, r *http.Request) {
+	var deletedForecast models.Forecast
 	db, ok := r.Context().Value("db").(*d.Database)
 	if !ok {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -211,24 +174,23 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	coll := db.Db.Collection("users")
+	coll := db.Db.Collection("forecasts")
 	id, err := primitive.ObjectIDFromHex(chi.URLParam(r, "id"))
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{ "message": "` + "Not a valid id." + `"}`))
 		return
 	}
-	err = coll.FindOneAndDelete(ctx, bson.D{{"_id", id}}).Decode(&deletedUser)
+	err = coll.FindOneAndDelete(ctx, bson.D{{"_id", id}}).Decode(&deletedForecast)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte(`{ "message": "User with given id not found."}`))
+			w.Write([]byte(`{ "message": "Forecast with given id not found."}`))
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 		return
 	}
-	deletedUser.Password = ""
-	render.JSON(w, r, deletedUser)
+	render.JSON(w, r, deletedForecast)
 }

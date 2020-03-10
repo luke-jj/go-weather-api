@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/luke-jj/go-weather-api/cmd/weatherd/routes"
+	"github.com/luke-jj/go-weather-api/pkg/routes"
 )
 
 func Routes(r *chi.Mux) {
