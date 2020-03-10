@@ -1,5 +1,9 @@
 # Go Weather Service REST API
 
+## Installation
+- Manual installation requires Go v1.3 or newer.
+- Run `dep ensure` to fetch the dependencies.
+
 ## Environment Variables
 The following environment variables are required to be set (example values):
 
@@ -17,7 +21,8 @@ These two variables are optional
     API_CONFIG_NAME=production-config
     API_LOG_ENABLED=true
 
+
 ## Dev Notes
 ### Using Reflex for hot reloading
 
-     reflex -r '\.go$' -s -- sh -c "go run *.go"
+     reflex -r '\.go$' -s -- sh -c "go run cmd/weather-server/*.go"
