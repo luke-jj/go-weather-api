@@ -36,7 +36,7 @@ func (user User) GenerateAuthToken(privateKey string) (string, error) {
 		user.IsAdmin,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 30).Unix(),
-			Issuer:    "test",
+			Issuer:    "weather-api",
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

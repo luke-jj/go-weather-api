@@ -21,11 +21,11 @@ import (
 func Forecasts() *chi.Mux {
 	r := chi.NewRouter()
 	r.Get("/", getForecasts)
-	r.With(middleware.Admin).Post("/", createForecast)
+	r.With(middleware.Auth, middleware.Admin).Post("/", createForecast)
 	r.Route("/{id}", func(r chi.Router) {
 		r.Get("/", getForecastById)
-		r.With(middleware.Admin).Put("/", updateForecast)
-		r.With(middleware.Admin).Delete("/", deleteForecast)
+		r.With(middleware.Auth, middleware.Admin).Put("/", updateForecast)
+		r.With(middleware.Auth, middleware.Admin).Delete("/", deleteForecast)
 	})
 
 	return r

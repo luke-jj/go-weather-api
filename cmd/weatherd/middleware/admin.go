@@ -1,11 +1,23 @@
 package middleware
 
-import "fmt"
-import "net/http"
+import (
+	"github.com/luke-jj/go-weather-api/cmd/weatherd/models"
+	"net/http"
+)
 
 func Admin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Checking admin status.")
+		user, ok := r.Context().Value("user").(*models.Claims)
+		if !ok {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
+			return
+		}
+		if !user.IsAdmin {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{ "message": "` + http.StatusText(403) + `"}`))
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }

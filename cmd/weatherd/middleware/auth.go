@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -22,10 +23,9 @@ func Auth(next http.Handler) http.Handler {
 			w.Write([]byte(`{ "message": "` + http.StatusText(500) + `"}`))
 			return
 		}
-
 		token, err := jwt.ParseWithClaims(r.Header["X-Auth-Token"][0], &models.Claims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Token uses different signing method")
+				return nil, fmt.Errorf("Token uses different signing method.")
 			}
 			return []byte(config.JWTPRIVATEKEY), nil
 		})
@@ -34,6 +34,7 @@ func Auth(next http.Handler) http.Handler {
 			w.Write([]byte(`{ "message": "Access denied. Invalid token."}`))
 			return
 		}
-		next.ServeHTTP(w, r)
+		ctx := context.WithValue(r.Context(), "user", token.Claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

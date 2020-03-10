@@ -12,7 +12,6 @@ import (
 
 func Middleware(config *c.Config, db *d.Database, r *chi.Mux) {
 	r.Use(
-		// TODO: set config as context
 		m.GetCORSHandler(),
 		m.SetConfigContext(config),
 		m.SetDatabaseContext(db),
